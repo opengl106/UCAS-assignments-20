@@ -7,9 +7,10 @@
 #define SIZE 15
 #define PLAYER1 1
 #define PLAYER2 2
-#define SEARCHBEAM1 10
-#define SEARCHBEAM2 10
-#define ADVERSCONS 2
+#define SEARCHBEAM1 5
+#define SEARCHBEAM2 5
+#define ADVERSCONS 0.8
+#define PRUNEADV 0.9
 #define GREEDYRATE 0.5
 #define ADVGREEDYRATE 0.5
 
@@ -556,7 +557,7 @@ struct point autoret(){
   for(j=0;j<SIZE;j++){
    temp.x=i;
    temp.y=j;
-   temp.value=autoscore(i, j, current_player)+ADVERSCONS*autoscore(i, j, adversarial_player);
+   temp.value=autoscore(i, j, current_player)+PRUNEADV*autoscore2(i, j, adversarial_player);
    if(temp.value>ord1[0].value&&!muda(i, j)){
     myminiheap(ord1, SEARCHBEAM1, temp);
    }
@@ -573,7 +574,7 @@ struct point autoret(){
    for(j=0;j<SIZE;j++){
     temp.x=i;
     temp.y=j;
-    temp.value=ADVERSCONS*autoscore(i, j, adversarial_player)+autoscore(i, j, current_player);
+    temp.value=autoscore(i, j, adversarial_player)+PRUNEADV*autoscore2(i, j, current_player);
     if(temp.value>ord2[m][0].value&&!muda(i, j)){
      myminiheap(ord2[m], SEARCHBEAM2, temp);
     }
@@ -601,7 +602,7 @@ struct point autoret(){
    //三级剪枝
    for(i=0;i<SIZE;i++){
     for(j=0;j<SIZE;j++){
-     tmpscr=autoscore(i, j, current_player)+ADVERSCONS*autoscore(i, j, adversarial_player);
+     tmpscr=autoscore(i, j, current_player)+PRUNEADV*autoscore2(i, j, adversarial_player);
      if(tmpscr>max){
       max=tmpscr;
       i0=i;
@@ -611,7 +612,7 @@ struct point autoret(){
    }
 
    //三级剪枝完毕，填充第二层搜索框一位并去掉伪子
-   min2[n] = 1/(1+GREEDYRATE)*ord1[m].value - 1/(1+ADVGREEDYRATE)*ADVERSCONS*ord2[m][n].value + GREEDYRATE/(1+GREEDYRATE)*autoscore(i0, j0, current_player) - ADVGREEDYRATE/(1+ADVGREEDYRATE)*ADVERSCONS*autoscore(i0, j0, adversarial_player);
+   min2[n] = 1/(1+GREEDYRATE)*ord1[m].value - 1/(1+ADVGREEDYRATE)*ADVERSCONS*ord2[m][n].value + GREEDYRATE/(1+GREEDYRATE)*autoscore(i0, j0, current_player) - ADVGREEDYRATE/(1+ADVGREEDYRATE)*PRUNEADV*autoscore2(i0, j0, adversarial_player);
    aRecordBoard[ord2[m][n].x][ord2[m][n].y]=0;
   }
 
@@ -655,7 +656,16 @@ int autoscore(int x, int y, int PLAYER){
   return 0;
  }else{
   int hi=tanehi(x, y, PLAYER), hu=ikihu(x, y, PLAYER), omi=okimi(x, y, PLAYER), mi=ikimi(x, y, PLAYER), oyo=okiyo(x, y, PLAYER), his1=hissatsu1(x, y, PLAYER), his2=hissatsu2(x, y, PLAYER), yo=ikiyo(x, y, PLAYER), itsu=narugo(x, y, PLAYER);
-  return (hi+50*omi+100*hu+10000*mi+12000*oyo+90000*his2+95000*his1+300000*yo+3000000*itsu);
+  return (hi+120*hu+130*omi+12000*mi+105000*oyo+90000*his2+95000*his1+300000*yo+3000000*itsu);
+ }
+}
+
+int autoscore2(int x, int y, int PLAYER){
+ if(kinte(x, y, PLAYER)){
+  return 0;
+ }else{
+  int hi=tanehi(x, y, PLAYER), hu=ikihu(x, y, PLAYER), omi=okimi(x, y, PLAYER), mi=ikimi(x, y, PLAYER), oyo=okiyo(x, y, PLAYER), his1=hissatsu1(x, y, PLAYER), his2=hissatsu2(x, y, PLAYER), yo=ikiyo(x, y, PLAYER), itsu=narugo(x, y, PLAYER);
+  return (hi+100*hu+120*omi+10000*mi+12000*oyo+90000*his2+95000*his1+300000*yo+1000000*itsu);
  }
 }
 
